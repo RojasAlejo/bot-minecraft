@@ -1,6 +1,6 @@
 const mineflayer = require('mineflayer')
 const config = require('../../config')
-const logger = require('../utils/logger')
+const startSlotWatcher = require('./slotWatcher')
 
 let currentBot = null
 
@@ -14,7 +14,11 @@ function crearBot() {
     // Cargar módulos
     require('./login')(bot)
     require('./survival')(bot)
+    
     const discordClient = require('../discord/discordControl')(bot)
+
+    startSlotWatcher(discordClient)
+
     require('./pwarp')(bot, discordClient)
     require('./hudPwarp')(bot, discordClient)
     require('../commands/comandos')(bot)
