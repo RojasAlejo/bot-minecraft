@@ -1,4 +1,4 @@
-const db = require('../../database/db')
+const db = require('../database/db')
 
 let notified2min = {}
 let notified1min = {}

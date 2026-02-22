@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js')
-const db = require('../../database/db')
+const db = require('../database/db')
 
 module.exports = (bot, discordClient) => {
 

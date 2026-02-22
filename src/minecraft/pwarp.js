@@ -1,6 +1,6 @@
 module.exports = (bot, discordClient) => {
 
-    const db = require('../../database/db')
+    const db = require('../database/db')
 
     console.log('🧠 Módulo pwarp cargado (SQLite)')
 
