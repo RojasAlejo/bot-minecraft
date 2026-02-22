@@ -80,9 +80,7 @@ module.exports = (bot, discordClient) => {
             for (const i of SLOTS) {
 
                 const item = window.slots[i]
-                const actual = item
-                    ? `${item.name}|${item.displayName || ''}|${item.count}`
-                    : "VACIO"
+                const actual = item ? "OCUPADO" : "VACIO"
 
                 if (anterior[i] !== actual) {
 
