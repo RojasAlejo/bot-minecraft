@@ -19,41 +19,28 @@ module.exports = (bot, discordClient) => {
 
         console.log('🚀 Loop pwarp iniciado (30s)')
 
-        function loopPwarp() {
+        setInterval(() => {
 
             console.log('⏱️ Tick pwarp 30s')
 
-            if (!bot.pwarpActivo) {
-                console.log('⛔ Pwarp desactivado')
-                return setTimeout(loopPwarp, TIEMPO)
-            }
-
-            if (!bot.modoListo) {
-                console.log('⛔ Survival aún no listo')
-                return setTimeout(loopPwarp, TIEMPO)
-            }
-
-            if (esperando) {
-                console.log('⏳ Esperando cierre menú')
-                return setTimeout(loopPwarp, TIEMPO)
-            }
+            if (!bot.pwarpActivo) return
+            if (!bot.modoListo) return
+            if (esperando) return
 
             console.log('🔎 Buscando patrocinados...')
             esperando = true
             bot.chat('/pwarp')
 
+            // reset de seguridad
             setTimeout(() => {
                 if (esperando) {
-                    console.log('⚠️ Menú no abrió, reintentando...')
+                    console.log('⚠️ Reset forzado de estado esperando')
                     esperando = false
-                    return loopPwarp()
                 }
-            }, 3000)
+            }, 8000)
 
-            setTimeout(loopPwarp, TIEMPO)
-        }
+        }, TIEMPO)
 
-        loopPwarp()
     })
 
     bot.on('windowOpen', async (window) => {
