@@ -84,7 +84,7 @@ module.exports = (bot, discordClient) => {
                     ? `${item.name}|${item.displayName || ''}|${item.count}`
                     : "VACIO"
 
-                if (anterior[i] !== undefined && anterior[i] !== actual) {
+                if (anterior[i] !== actual) {
 
                     console.log(`🚨 Cambio detectado slot ${i}`)
 
