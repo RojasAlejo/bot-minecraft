@@ -1,43 +1,53 @@
-const fs = require('fs')
-const path = require('path')
-
-const estadoPath = path.join(__dirname, '../../estadoPwarp.json')
+const db = require('../../database/db')
 
 let notified2min = {}
 let notified1min = {}
 
 function startSlotWatcher(discordClient) {
+
     setInterval(() => {
         try {
-            const data = JSON.parse(fs.readFileSync(estadoPath, 'utf8'))
 
-            if (!data.activo) return
+            const slots = db.prepare('SELECT * FROM slots').all()
 
-            Object.entries(data.slots).forEach(([slot, timestamp]) => {
-                if (!timestamp) return
+            slots.forEach(({ id, timestamp }) => {
 
                 const restante = timestamp - Date.now()
 
-                if (restante <= 120000 && restante > 60000 && !notified2min[slot]) {
-                    notified2min[slot] = true
-                    discordClient.channels.cache.first()?.send(`⏳ Slot ${slot} disponible en 2 minutos`)
+                // Aviso 2 minutos
+                if (restante <= 120000 && restante > 60000 && !notified2min[id]) {
+                    notified2min[id] = true
+
+                    discordClient.channels.cache.first()?.send(
+                        `⏳ Slot ${id} disponible en 2 minutos`
+                    )
                 }
 
-                if (restante <= 60000 && restante > 0 && !notified1min[slot]) {
-                    notified1min[slot] = true
-                    discordClient.channels.cache.first()?.send(`⚠ Slot ${slot} disponible en 1 minuto`)
+                // Aviso 1 minuto
+                if (restante <= 60000 && restante > 0 && !notified1min[id]) {
+                    notified1min[id] = true
+
+                    discordClient.channels.cache.first()?.send(
+                        `⚠ Slot ${id} disponible en 1 minuto`
+                    )
                 }
 
+                // Cuando termina el tiempo
                 if (restante <= 0) {
-                    notified1min[slot] = false
-                    notified2min[slot] = false
+                    db.prepare('DELETE FROM slots WHERE id = ?').run(id)
+
+                    notified1min[id] = false
+                    notified2min[id] = false
                 }
+
             })
 
         } catch (err) {
             console.error('SlotWatcher error:', err)
         }
+
     }, 5000)
+
 }
 
 module.exports = startSlotWatcher

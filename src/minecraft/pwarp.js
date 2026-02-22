@@ -1,36 +1,8 @@
 module.exports = (bot, discordClient) => {
 
-    const fs = require('fs')
-    const ESTADO_FILE = './estadoPwarp.json'
+    const db = require('../../database/db')
 
-    let estadoInicial = {
-        activo: true,
-        slots: {
-            2: null,
-            3: null,
-            4: null,
-            5: null,
-            6: null
-        }
-    }
-
-    // 🔄 Cargar estado si existe
-    if (fs.existsSync(ESTADO_FILE)) {
-        try {
-            const data = fs.readFileSync(ESTADO_FILE)
-            estadoInicial = JSON.parse(data)
-            console.log('📂 Estado pwarp cargado desde archivo')
-        } catch (err) {
-            console.log('❌ Error leyendo estado guardado:', err.message)
-        }
-    }
-
-    bot.pwarpEstado = estadoInicial
-
-    bot.pwarpActivo = bot.pwarpEstado.activo
-    bot.modoListo = false
-
-    console.log('🧠 Módulo pwarp cargado')
+    console.log('🧠 Módulo pwarp cargado (SQLite)')
 
     const TU_ID = '421053729605943297'
     const CANAL_ID = '1209783958741454912'
@@ -39,6 +11,9 @@ module.exports = (bot, discordClient) => {
 
     let anterior = {}
     let esperando = false
+
+    bot.pwarpActivo = true
+    bot.modoListo = false
 
     bot.once('spawn', () => {
 
@@ -67,7 +42,6 @@ module.exports = (bot, discordClient) => {
             esperando = true
             bot.chat('/pwarp')
 
-            // 🔎 Si el menú no abre en 3s, reintentar rápido
             setTimeout(() => {
                 if (esperando) {
                     console.log('⚠️ Menú no abrió, reintentando...')
@@ -75,14 +49,6 @@ module.exports = (bot, discordClient) => {
                     return loopPwarp()
                 }
             }, 3000)
-
-            // 🔥 Timeout seguridad absoluto
-            setTimeout(() => {
-                if (esperando) {
-                    console.log('⚠️ Timeout seguridad activado - reseteando estado')
-                    esperando = false
-                }
-            }, 10000)
 
             setTimeout(loopPwarp, TIEMPO)
         }
@@ -97,16 +63,9 @@ module.exports = (bot, discordClient) => {
         if (title.includes('Warps comunitarios') && !title.includes('(1/')) {
 
             setTimeout(() => {
-                try {
-                    if (window.slots[13]) {
-                        bot.clickWindow(13, 0, 0)
-                        console.log('📖 Click libro')
-                    } else {
-                        console.log('⚠️ Slot libro vacío')
-                        esperando = false
-                    }
-                } catch (err) {
-                    console.log('❌ Error al hacer click libro:', err.message)
+                if (window.slots[13]) {
+                    bot.clickWindow(13, 0, 0)
+                } else {
                     esperando = false
                 }
             }, 600)
@@ -128,35 +87,29 @@ module.exports = (bot, discordClient) => {
                 if (anterior[i] !== undefined && anterior[i] !== actual) {
 
                     console.log(`🚨 Cambio detectado slot ${i}`)
-                    bot.pwarpEstado.slots[i] = Date.now()
+
+                    const timestamp = Date.now()
+
+                    // 🔥 Guardar en SQLite
+                    db.prepare(`
+                        INSERT INTO slots (id, timestamp)
+                        VALUES (?, ?)
+                        ON CONFLICT(id) DO UPDATE SET timestamp = excluded.timestamp
+                    `).run(i.toString(), timestamp)
+
                     if (bot.actualizarHUD) bot.actualizarHUD()
 
-                    // 💾 Guardar estado en archivo
                     try {
-                        fs.writeFileSync(
-                            ESTADO_FILE,
-                            JSON.stringify(bot.pwarpEstado, null, 2)
-                        )
-                        console.log('💾 Estado guardado')
-                    } catch (err) {
-                        console.log('❌ Error guardando estado:', err.message)
-                    }
-
-                    let canal
-                    try {
-                        canal = await discordClient.channels.fetch(CANAL_ID)
+                        const canal = await discordClient.channels.fetch(CANAL_ID)
                         if (canal) {
                             canal.send(`<@${TU_ID}> 🚨 CAMBIO SLOT ${i}`)
                         }
                     } catch (err) {
-                        console.log('❌ Error enviando alerta a Discord:', err.message)
+                        console.log('❌ Error enviando alerta:', err.message)
                     }
 
                     const msg = `/msg irojas ${i} DISPONIBLE`
-
                     bot.chat(msg)
-                    setTimeout(() => bot.chat(msg), 800)
-                    setTimeout(() => bot.chat(msg), 1600)
                 }
 
                 anterior[i] = actual
@@ -165,7 +118,6 @@ module.exports = (bot, discordClient) => {
             setTimeout(() => {
                 bot.closeWindow(window)
                 esperando = false
-                console.log('❌ Menú cerrado')
             }, 1200)
         }
     })

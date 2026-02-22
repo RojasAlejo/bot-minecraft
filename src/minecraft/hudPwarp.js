@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js')
+const db = require('../../database/db')
 
 module.exports = (bot, discordClient) => {
 
@@ -16,9 +17,13 @@ module.exports = (bot, discordClient) => {
 
     function tiempoRestante(slot) {
 
-        const ultima = bot.pwarpEstado?.slots?.[slot]
-        if (!ultima) return 'Sin datos'
+        const row = db.prepare(
+            'SELECT timestamp FROM slots WHERE id = ?'
+        ).get(slot.toString())
 
+        if (!row) return 'Sin datos'
+
+        const ultima = row.timestamp
         const horasTotales = DURACIONES[slot]
         const msTotal = horasTotales * 60 * 60 * 1000
         const restante = msTotal - (Date.now() - ultima)
@@ -33,25 +38,18 @@ module.exports = (bot, discordClient) => {
 
     async function actualizarHUD() {
 
-        if (!bot.pwarpEstado) return
-
         let canal
         try {
             canal = await discordClient.channels.fetch(CANAL_HUD_ID)
             if (!canal) return
         } catch (err) {
-            console.log('❌ Error obteniendo canal HUD:', err.message)
             return
         }
 
         const embed = new EmbedBuilder()
             .setTitle('📡 PANEL PWARP')
-            .setColor(bot.pwarpEstado.activo ? 0x00ff88 : 0xff3b3b)
-            .setDescription(
-                bot.pwarpEstado.activo
-                    ? '🟢 **ACTIVO**'
-                    : '🔴 **DESACTIVADO**'
-            )
+            .setColor(0x00ff88)
+            .setDescription('🟢 **ACTIVO**')
             .addFields(
                 { name: 'Slot 2 (48h)', value: tiempoRestante(2), inline: true },
                 { name: 'Slot 3 (24h)', value: tiempoRestante(3), inline: true },
@@ -64,7 +62,6 @@ module.exports = (bot, discordClient) => {
 
         if (!mensajeHUD) {
 
-            // 🔎 Buscar último mensaje del canal
             const mensajes = await canal.messages.fetch({ limit: 10 })
             const ultimoHUD = mensajes.find(
                 m =>
@@ -76,10 +73,8 @@ module.exports = (bot, discordClient) => {
             if (ultimoHUD) {
                 mensajeHUD = ultimoHUD
                 await mensajeHUD.edit({ embeds: [embed] })
-                console.log('♻️ HUD anterior reutilizado')
             } else {
                 mensajeHUD = await canal.send({ embeds: [embed] })
-                console.log('🆕 HUD nuevo creado')
             }
 
         } else {
@@ -87,12 +82,9 @@ module.exports = (bot, discordClient) => {
         }
     }
 
-    setInterval(actualizarHUD, 1 * 60 * 1000)
+    setInterval(actualizarHUD, 60000)
 
     bot.actualizarHUD = actualizarHUD
 
-    // Crear HUD apenas conecta Discord
-    setTimeout(() => {
-        actualizarHUD()
-    }, 5000)
+    setTimeout(actualizarHUD, 5000)
 }
