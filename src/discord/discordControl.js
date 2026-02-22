@@ -17,6 +17,14 @@ module.exports = (mcBot) => {
         console.log('🤖 Bot Discord conectado')
     })
 
+    client.on('error', (err) => {
+        console.error('💥 Discord error:', err)
+    })
+
+    client.on('shardError', (err) => {
+        console.error('💥 Shard error:', err)
+    })
+
     client.on('messageCreate', (message) => {
 
         if (message.author.bot) return
@@ -32,6 +40,9 @@ module.exports = (mcBot) => {
     })
 
     client.login(TOKEN)
+        .catch(err => {
+            console.error('❌ Error al loguear Discord:', err)
+        })
 
     return client
 }

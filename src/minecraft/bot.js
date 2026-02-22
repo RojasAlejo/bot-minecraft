@@ -1,9 +1,13 @@
 const mineflayer = require('mineflayer')
 const config = require('../../config')
+const logger = require('../utils/logger')
+
+let currentBot = null
 
 function crearBot() {
 
     const bot = mineflayer.createBot(config)
+    currentBot = bot
 
     bot.modoListo = false
 
@@ -24,10 +28,16 @@ function crearBot() {
     })
 
     bot.on('end', () => {
-        console.log('⚠️ Bot desconectado')
-        console.log('🔁 Reintentando conexión en 10 segundos...')
+        console.log('Bot desconectado')
+
+        if (currentBot) {
+            try {
+                currentBot.removeAllListeners()
+            } catch (e) { }
+        }
 
         setTimeout(() => {
+            console.log('Reiniciando instancia limpia...')
             crearBot()
         }, 10000)
     })
