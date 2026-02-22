@@ -1,6 +1,5 @@
-require('dotenv').config()
 const mineflayer = require('mineflayer')
-const config = require('./config')
+const config = require('../../config')
 
 function crearBot() {
 
@@ -11,10 +10,10 @@ function crearBot() {
     // Cargar módulos
     require('./login')(bot)
     require('./survival')(bot)
-    const discordClient = require('./discordControl')(bot)
+    const discordClient = require('../discord/discordControl')(bot)
     require('./pwarp')(bot, discordClient)
     require('./hudPwarp')(bot, discordClient)
-    require('./comandos')(bot)
+    require('../commands/comandos')(bot)
 
     bot.on('spawn', () => {
         console.log('✅ Bot conectado')

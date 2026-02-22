@@ -2,10 +2,10 @@
   "name": "botmc",
   "version": "1.0.0",
   "description": "",
-  "main": "bot.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --ignore estadoPwarp.json bot.js"
+    "dev": "nodemon --ignore estadoPwarp.json index.js"
   },
   "keywords": [],
   "author": "",
