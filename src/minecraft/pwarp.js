@@ -78,6 +78,19 @@ module.exports = (bot, discordClient) => {
                         `<@${TU_ID}> 🚨 CAMBIO SLOT ${i}`
                     )
 
+                    // 🔔 Mensajes privados en Minecraft (x3)
+                    setTimeout(() => {
+                        bot.chat(`/msg irojas 🚨 SLOT ${i} CAMBIÓ`)
+                    }, 300)
+
+                    setTimeout(() => {
+                        bot.chat(`/msg irojas 🚨 SLOT ${i} CAMBIÓ`)
+                    }, 800)
+
+                    setTimeout(() => {
+                        bot.chat(`/msg irojas 🚨 SLOT ${i} CAMBIÓ`)
+                    }, 1300)
+
                     // si quedó ocupado guardamos tiempo
                     if (item) {
                         const timestamp = Date.now()
