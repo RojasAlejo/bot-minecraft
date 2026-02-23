@@ -39,7 +39,7 @@ module.exports = (mcBot) => {
         message.reply('✅ Comando enviado a Minecraft')
     })
 
-    discordClient.on('messageCreate', async (message) => {
+    Client.on('messageCreate', async (message) => {
 
         if (message.author.bot) return
 
