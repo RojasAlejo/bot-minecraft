@@ -69,7 +69,10 @@ module.exports = (bot, discordClient) => {
                 const item = window.slots[i]
                 const actual = item ? "OCUPADO" : "VACIO"
 
-                if (anterior[i] === "VACIO" && actual === "OCUPADO") {
+                if (
+                    (anterior[i] === undefined || anterior[i] === "VACIO") &&
+                    actual === "OCUPADO"
+                ) {
 
                     console.log(`🚨 Cambio detectado slot ${i}`)
 
