@@ -25,40 +25,39 @@ module.exports = (mcBot) => {
         console.error('💥 Shard error:', err)
     })
 
-    client.on('messageCreate', (message) => {
+    client.on('messageCreate', async (message) => {
 
         if (message.author.bot) return
         if (message.author.id !== TU_ID) return
-        if (!message.content.startsWith('!')) return
 
-        const comando = message.content.replace(/^!/, '')
-
-        console.log('📩 Discord -> MC:', comando)
-
-        mcBot.chat(comando)
-        message.reply('✅ Comando enviado a Minecraft')
-    })
-
-    Client.on('messageCreate', async (message) => {
-
-        if (message.author.bot) return
-
-        // SOLO TU ID puede usarlo
-        if (message.author.id !== '421053729605943297') return
-
+        // 🔥 Control remoto prender/apagar
         if (message.content === '/apagar') {
 
-            bot.closeWindow(bot.currentWindow)
-            bot.pwarpActivo = false
-            message.reply('🛑 Bot pwarp APAGADO')
+            mcBot.pwarpActivo = false
 
+            if (mcBot.currentWindow) {
+                try { mcBot.closeWindow(mcBot.currentWindow) } catch { }
+            }
+
+            return message.reply('🛑 Pwarp APAGADO')
         }
 
         if (message.content === '/prender') {
 
-            bot.pwarpActivo = true
-            message.reply('🟢 Bot pwarp ENCENDIDO')
+            mcBot.pwarpActivo = true
+            return message.reply('🟢 Pwarp ENCENDIDO')
+        }
 
+        // 🎮 Comandos manuales hacia Minecraft con !
+        if (message.content.startsWith('!')) {
+
+            const comando = message.content.slice(1)
+
+            console.log('📩 Discord -> MC:', comando)
+
+            mcBot.chat(comando)
+
+            return message.reply('✅ Comando enviado a Minecraft')
         }
 
     })
