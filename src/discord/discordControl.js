@@ -48,6 +48,38 @@ module.exports = (mcBot) => {
             return message.reply('🟢 Pwarp ENCENDIDO')
         }
 
+        // 🔥 Forzar slot manualmente
+        if (message.content.startsWith('/forzar')) {
+
+            const partes = message.content.split(' ')
+
+            if (partes.length !== 3)
+                return message.reply('Uso correcto: /forzar SLOT MINUTOS')
+
+            const slot = partes[1]
+            const minutos = parseInt(partes[2])
+
+            if (isNaN(minutos))
+                return message.reply('Los minutos deben ser un número')
+
+            const db = require('../database/db')
+
+            const timestamp = Date.now() - (minutos * 60 * 1000)
+
+            db.prepare(`
+                INSERT INTO slots (id, timestamp)
+                VALUES (?, ?)
+                ON CONFLICT(id) DO UPDATE SET timestamp = excluded.timestamp
+            `).run(slot.toString(), timestamp)
+
+            if (mcBot.actualizarHUD)
+                mcBot.actualizarHUD()
+
+            return message.reply(
+                `✅ Slot ${slot} forzado como adquirido hace ${minutos} minutos`
+            )
+        }
+
         // 🎮 Comandos manuales hacia Minecraft con !
         if (message.content.startsWith('!')) {
 
