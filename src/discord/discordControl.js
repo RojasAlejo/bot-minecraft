@@ -130,27 +130,26 @@ module.exports = (mcBot) => {
             const diferencia = totalHoy - totalAyer
 
             return message.reply(
-                `📊 **PUNTOS DEL CLAN**
+`📊 **PUNTOS DEL CLAN**
 
-            🟢 Hoy ganados: ${ganadosHoy}
-            🔴 Hoy perdidos: ${perdidosHoy}
-            📈 Neto hoy: ${totalHoy >= 0 ? '+' : ''}${totalHoy}
+🟢 Hoy ganados: ${ganadosHoy}
+🔴 Hoy perdidos: ${perdidosHoy}
+📈 Neto hoy: ${totalHoy >= 0 ? '+' : ''}${totalHoy}
 
-            📅 Ayer neto: ${totalAyer >= 0 ? '+' : ''}${totalAyer}
+📅 Ayer neto: ${totalAyer >= 0 ? '+' : ''}${totalAyer}
 
-            📊 Diferencia: ${diferencia >= 0 ? '+' : ''}${diferencia}`
+📊 Diferencia: ${diferencia >= 0 ? '+' : ''}${diferencia}`
             )
         }
 
         // 🎮 Comandos manuales hacia Minecraft (permitidos)
-        const comandosPermitidos = ['warp', 'spawn', 'home', 'msg'] // agregá los que realmente uses
+        const comandosPermitidos = ['warp', 'spawn', 'home', 'msg']
 
         if (message.content.startsWith('!')) {
 
             const comando = message.content.slice(1)
             const base = comando.split(' ')[0]
 
-            // Si NO está permitido → no se envía al juego
             if (!comandosPermitidos.includes(base)) {
                 return message.reply('❌ Comando no permitido para Minecraft.')
             }
@@ -162,10 +161,12 @@ module.exports = (mcBot) => {
             return message.reply('✅ Comando enviado a Minecraft')
         }
 
-        client.login(TOKEN)
-            .catch(err => {
-                console.error('❌ Error al loguear Discord:', err)
-            })
+    })
 
-        return client
-    }
+    client.login(TOKEN)
+        .catch(err => {
+            console.error('❌ Error al loguear Discord:', err)
+        })
+
+    return client
+}
