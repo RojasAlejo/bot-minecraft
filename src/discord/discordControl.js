@@ -88,6 +88,7 @@ module.exports = (mcBot) => {
                 return message.reply('❌ Este comando solo funciona en el canal de estadísticas.')
 
             const db = require('../database/db')
+            const { EmbedBuilder } = require('discord.js')
 
             const hoy = new Date().toISOString().split('T')[0]
 
@@ -96,18 +97,18 @@ module.exports = (mcBot) => {
             const ayer = ayerDate.toISOString().split('T')[0]
 
             const hoyData = db.prepare(`
-                SELECT type, SUM(amount) as total
-                FROM clan_points
-                WHERE date = ?
-                GROUP BY type
-            `).all(hoy)
+        SELECT type, SUM(amount) as total
+        FROM clan_points
+        WHERE date = ?
+        GROUP BY type
+    `).all(hoy)
 
             const ayerData = db.prepare(`
-                SELECT type, SUM(amount) as total
-                FROM clan_points
-                WHERE date = ?
-                GROUP BY type
-            `).all(ayer)
+        SELECT type, SUM(amount) as total
+        FROM clan_points
+        WHERE date = ?
+        GROUP BY type
+    `).all(ayer)
 
             let ganadosHoy = 0
             let perdidosHoy = 0
@@ -129,17 +130,34 @@ module.exports = (mcBot) => {
             const totalAyer = ganadosAyer - perdidosAyer
             const diferencia = totalHoy - totalAyer
 
-            return message.reply(
-`📊 **PUNTOS DEL CLAN**
+            const embed = new EmbedBuilder()
+                .setColor(totalHoy >= 0 ? 0x00ff88 : 0xff3c3c)
+                .setTitle('📊 PANEL PUNTOS DEL CLAN')
+                .setDescription('Resumen diario automático')
+                .addFields(
+                    {
+                        name: '🟢 Hoy',
+                        value:
+                            `Ganados: ${ganadosHoy}
+Perdidos: ${perdidosHoy}
+Neto: ${totalHoy >= 0 ? '+' : ''}${totalHoy}`,
+                        inline: true
+                    },
+                    {
+                        name: '📅 Ayer',
+                        value:
+                            `Neto: ${totalAyer >= 0 ? '+' : ''}${totalAyer}`,
+                        inline: true
+                    },
+                    {
+                        name: '📈 Diferencia',
+                        value: `${diferencia >= 0 ? '+' : ''}${diferencia}`,
+                        inline: false
+                    }
+                )
+                .setFooter({ text: `Actualizado • ${new Date().toLocaleTimeString()}` })
 
-🟢 Hoy ganados: ${ganadosHoy}
-🔴 Hoy perdidos: ${perdidosHoy}
-📈 Neto hoy: ${totalHoy >= 0 ? '+' : ''}${totalHoy}
-
-📅 Ayer neto: ${totalAyer >= 0 ? '+' : ''}${totalAyer}
-
-📊 Diferencia: ${diferencia >= 0 ? '+' : ''}${diferencia}`
-            )
+            return message.reply({ embeds: [embed] })
         }
 
         // 🎮 Comandos manuales hacia Minecraft (permitidos)
