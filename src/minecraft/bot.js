@@ -1,6 +1,7 @@
 const mineflayer = require('mineflayer')
 const config = require('../../config')
 const startSlotWatcher = require('./slotWatcher')
+const startClanPoints = require('./clanPoints')
 
 let currentBot = null
 
@@ -18,6 +19,7 @@ function crearBot() {
     const discordClient = require('../discord/discordControl')(bot)
 
     startSlotWatcher(discordClient)
+    startClanPoints(bot)
 
     require('./pwarp')(bot, discordClient)
     require('./hudPwarp')(bot, discordClient)

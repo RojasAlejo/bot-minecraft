@@ -20,4 +20,13 @@ db.prepare(`
   )
 `).run()
 
+db.prepare(`
+CREATE TABLE IF NOT EXISTS clan_points (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT,
+    amount INTEGER,
+    date TEXT
+)
+`).run()
+
 module.exports = db

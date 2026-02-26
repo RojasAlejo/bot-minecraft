@@ -12,6 +12,7 @@ module.exports = (mcBot) => {
 
     const TOKEN = process.env.DISCORD_TOKEN
     const TU_ID = '421053729605943297'
+    const CANAL_STATS_ID = '1476705870187597914'
 
     client.once('clientReady', () => {
         console.log('🤖 Bot Discord conectado')
