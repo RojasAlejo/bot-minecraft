@@ -131,31 +131,22 @@ module.exports = (mcBot) => {
             const diferencia = totalHoy - totalAyer
 
             const embed = new EmbedBuilder()
-                .setColor(totalHoy >= 0 ? 0x00ff88 : 0xff3c3c)
-                .setTitle('📊 PANEL PUNTOS DEL CLAN')
-                .setDescription('Resumen diario automático')
-                .addFields(
-                    {
-                        name: '🟢 Hoy',
-                        value:
-                            `Ganados: ${ganadosHoy}
-Perdidos: ${perdidosHoy}
-Neto: ${totalHoy >= 0 ? '+' : ''}${totalHoy}`,
-                        inline: true
-                    },
-                    {
-                        name: '📅 Ayer',
-                        value:
-                            `Neto: ${totalAyer >= 0 ? '+' : ''}${totalAyer}`,
-                        inline: true
-                    },
-                    {
-                        name: '📈 Diferencia',
-                        value: `${diferencia >= 0 ? '+' : ''}${diferencia}`,
-                        inline: false
-                    }
+                .setTitle('🦌 PUNTOS del CLAN')
+                .setDescription(
+                    `⬇️ HOY
+  ✅ Ganados: ${ganadosHoy}
+  ❌ Perdidos: ${perdidosHoy}
+  📊 Neto: ${totalHoy >= 0 ? '+' : ''}${totalHoy}
+
+⬅️ AYER
+  📊 Neto: ${totalAyer >= 0 ? '+' : ''}${totalAyer}
+
+📈 DIFERENCIA
+  ${diferencia >= 0 ? '+' : ''}${diferencia}`
                 )
-                .setFooter({ text: `Actualizado • ${new Date().toLocaleTimeString()}` })
+                .setFooter({
+                    text: `Actualizado • ${new Date().toLocaleTimeString()}`
+                })
 
             return message.reply({ embeds: [embed] })
         }
