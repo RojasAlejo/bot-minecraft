@@ -131,22 +131,21 @@ module.exports = (mcBot) => {
             const diferencia = totalHoy - totalAyer
 
             const embed = new EmbedBuilder()
-                .setTitle('🦌 PUNTOS del CLAN')
+                .setTitle('🦌 **PUNTOS del CLAN**')
                 .setDescription(
-                    `⬇️ HOY
-  ✅ Ganados: ${ganadosHoy}
-  ❌ Perdidos: ${perdidosHoy}
-  📊 Neto: ${totalHoy >= 0 ? '+' : ''}${totalHoy}
+                    `**HOY**
+Ganados ............. ${ganadosHoy}
+Perdidos ............ ${perdidosHoy}
+Neto ................ ${totalHoy >= 0 ? '+' : ''}${totalHoy}
 
-⬅️ AYER
-  📊 Neto: ${totalAyer >= 0 ? '+' : ''}${totalAyer}
+**AYER**
+Neto ................ ${totalAyer >= 0 ? '+' : ''}${totalAyer}
 
-📈 DIFERENCIA
-  ${diferencia >= 0 ? '+' : ''}${diferencia}`
+**Diferencia**
+${diferencia >= 0 ? '+' : ''}${diferencia}`
                 )
-                .setFooter({
-                    text: `Actualizado • ${new Date().toLocaleTimeString()}`
-                })
+                .setColor(totalHoy >= 0 ? 0x2ecc71 : 0xe74c3c)
+                .setFooter({ text: `Actualizado • ${new Date().toLocaleTimeString()}` })
 
             return message.reply({ embeds: [embed] })
         }
