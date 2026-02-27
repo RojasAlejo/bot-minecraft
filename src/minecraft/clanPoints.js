@@ -35,7 +35,9 @@ function startClanPoints(bot) {
 
         console.log(`📊 Punto registrado: ${tipo} ${cantidad}`)
 
-        // Notificar al sistema de meta diaria
+            console.log('🔥 Emitiendo clanPointsUpdate')
+
+        // 🔥 ESTA LÍNEA ES CLAVE
         bot.emit('clanPointsUpdate')
     }
 }

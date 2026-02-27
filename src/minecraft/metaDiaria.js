@@ -27,6 +27,7 @@ module.exports = (bot, discordClient) => {
 
     // 🔥 Escuchar cambios de puntos
     bot.on('clanPointsUpdate', async () => {
+        console.log('📡 Evento clanPointsUpdate recibido en metaDiaria')
         await actualizarMeta()
     })
 
@@ -36,6 +37,8 @@ module.exports = (bot, discordClient) => {
     }, 5000)
 
     async function actualizarMeta() {
+
+        console.log('📊 Ejecutando actualizarMeta()')
 
         const hoy = obtenerFechaEspaña(0)
         const ayer = obtenerFechaEspaña(1)
@@ -127,6 +130,8 @@ module.exports = (bot, discordClient) => {
     }
 
     async function actualizarEmbed(netoHoy, netoAyer, progreso, faltan) {
+
+        console.log('📥 Intentando actualizar/embed en canal', CANAL_RACHA_ID)
 
         const canal = await discordClient.channels.fetch(CANAL_RACHA_ID)
         if (!canal) return
