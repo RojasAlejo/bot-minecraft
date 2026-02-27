@@ -34,6 +34,9 @@ function startClanPoints(bot) {
         `).run(tipo, cantidad, hoy)
 
         console.log(`📊 Punto registrado: ${tipo} ${cantidad}`)
+
+        // Notificar al sistema de meta diaria
+        bot.emit('clanPointsUpdate')
     }
 }
 
