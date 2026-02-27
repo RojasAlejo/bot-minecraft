@@ -1,5 +1,3 @@
-console.log('✅ metaDiaria cargado correctamente')
-
 const db = require('../database/db')
 const { EmbedBuilder } = require('discord.js')
 
@@ -8,39 +6,42 @@ module.exports = (bot, discordClient) => {
     const CANAL_RACHA_ID = '1476739358743593000'
     const ZONA = 'Europe/Madrid'
 
-    // 🔥 Crear tabla si no existe
+    // Crear tabla si no existe
     db.prepare(`
         CREATE TABLE IF NOT EXISTS clan_streak (
             id INTEGER PRIMARY KEY CHECK (id = 1),
             streak INTEGER DEFAULT 0,
+            best_streak INTEGER DEFAULT 0,
             last_checked TEXT,
             message_id TEXT
         )
     `).run()
 
+    // Asegurar columna best_streak si la tabla ya existía
+    try {
+        db.prepare(`ALTER TABLE clan_streak ADD COLUMN best_streak INTEGER DEFAULT 0`).run()
+    } catch { }
+
     // Insertar fila inicial si no existe
     const row = db.prepare(`SELECT * FROM clan_streak WHERE id = 1`).get()
     if (!row) {
         db.prepare(`
-            INSERT INTO clan_streak (id, streak, last_checked, message_id)
-            VALUES (1, 0, NULL, NULL)
+            INSERT INTO clan_streak (id, streak, best_streak, last_checked, message_id)
+            VALUES (1, 0, 0, NULL, NULL)
         `).run()
     }
 
-    // 🔥 Escuchar cambios de puntos
+    // Escuchar cambios de puntos
     bot.on('clanPointsUpdate', async () => {
-        console.log('📡 Evento clanPointsUpdate recibido en metaDiaria')
         await actualizarMeta()
     })
 
-    // También actualizar al iniciar
+    // Actualizar al iniciar
     setTimeout(() => {
         actualizarMeta()
     }, 5000)
 
     async function actualizarMeta() {
-
-        console.log('📊 Ejecutando actualizarMeta()')
 
         const hoy = obtenerFechaEspaña(0)
         const ayer = obtenerFechaEspaña(1)
@@ -101,18 +102,22 @@ module.exports = (bot, discordClient) => {
         const netoAnteayer = obtenerNeto(anteayer)
 
         let nuevaRacha = 0
+        let mejorRacha = data.best_streak || 0
 
         if (netoAyer > netoAnteayer) {
             nuevaRacha = data.streak + 1
+            if (nuevaRacha > mejorRacha) {
+                mejorRacha = nuevaRacha
+            }
         } else {
             nuevaRacha = 0
         }
 
         db.prepare(`
             UPDATE clan_streak
-            SET streak = ?, last_checked = ?
+            SET streak = ?, best_streak = ?, last_checked = ?
             WHERE id = 1
-        `).run(nuevaRacha, hoy)
+        `).run(nuevaRacha, mejorRacha, hoy)
 
         if (data.streak !== nuevaRacha) {
             anunciarCambioRacha(nuevaRacha)
@@ -133,8 +138,6 @@ module.exports = (bot, discordClient) => {
 
     async function actualizarEmbed(netoHoy, netoAyer, progreso, faltan) {
 
-        console.log('📥 Intentando actualizar/embed en canal', CANAL_RACHA_ID)
-
         const canal = await discordClient.channels.fetch(CANAL_RACHA_ID)
         if (!canal) return
 
@@ -151,7 +154,8 @@ module.exports = (bot, discordClient) => {
             .setTitle('🏆 META DIARIA — CLAN')
             .setColor(color)
             .setDescription(
-                `🔥 **Racha:** ${data.streak} días\n\n` +
+                `🔥 **Racha actual:** ${data.streak} días\n` +
+                `🏆 **Mejor racha:** ${data.best_streak || 0} días\n\n` +
                 `📅 **Ayer:** ${formatear(netoAyer)}\n` +
                 `📈 **Hoy:** ${formatear(netoHoy)}\n\n` +
                 `📊 Progreso: ${progreso}%\n` +
