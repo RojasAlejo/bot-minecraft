@@ -1,3 +1,5 @@
+console.log('✅ metaDiaria cargado correctamente')
+
 const db = require('../database/db')
 const { EmbedBuilder } = require('discord.js')
 
