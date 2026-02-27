@@ -17,9 +17,13 @@ function crearBot() {
     require('./survival')(bot)
     
     const discordClient = require('../discord/discordControl')(bot)
+    console.log(' discordCliente es:', typeof discordClient)
 
     startSlotWatcher(discordClient)
     startClanPoints(bot)
+
+    // Sistema de meta diaria y racha
+    require('./metaDiaria')(bot, discordClient)
 
     require('./pwarp')(bot, discordClient)
     require('./hudPwarp')(bot, discordClient)
