@@ -2,39 +2,50 @@ module.exports = (bot, discordClient) => {
 
     const db = require('../database/db')
 
-    console.log('🧠 Módulo pwarp cargado')
+    console.log('🧠 Módulo pwarp OPTIMIZADO cargado')
 
     const TU_ID = '421053729605943297'
     const CANAL_ID = '1209783958741454912'
-    const TIEMPO = 30000
+    const INTERVALO = 30000
     const SLOTS = [2, 3, 4, 5, 6]
 
     let anterior = {}
-    let esperando = false
+    let procesando = false
     let ultimoMensaje = null
+    let ultimoCambio = 0
 
     bot.pwarpActivo = true
     bot.modoListo = false
 
+    // =========================
+    // LOOP INTELIGENTE
+    // =========================
+
+    async function loopPwarp() {
+
+        if (!bot.pwarpActivo || !bot.modoListo || procesando) {
+            return setTimeout(loopPwarp, 5000)
+        }
+
+        procesando = true
+        bot.chat('/pwarp')
+
+        // Timeout de seguridad
+        setTimeout(() => {
+            procesando = false
+        }, 10000)
+
+        setTimeout(loopPwarp, INTERVALO)
+    }
+
     bot.once('spawn', () => {
-
-        console.log('🚀 Loop pwarp iniciado')
-
-        setInterval(() => {
-
-            if (!bot.pwarpActivo) return
-            if (!bot.modoListo) return
-            if (esperando) return
-
-            esperando = true
-            bot.chat('/pwarp')
-
-            setTimeout(() => {
-                if (esperando) esperando = false
-            }, 8000)
-
-        }, TIEMPO)
+        console.log('🚀 Loop pwarp inteligente iniciado')
+        setTimeout(loopPwarp, 5000)
     })
+
+    // =========================
+    // DETECCIÓN DE GUI
+    // =========================
 
     bot.on('windowOpen', async (window) => {
 
@@ -46,75 +57,63 @@ module.exports = (bot, discordClient) => {
                 if (window.slots[13]) {
                     bot.clickWindow(13, 0, 0)
                 } else {
-                    esperando = false
+                    procesando = false
                 }
             }, 600)
 
             return
         }
 
-        if (title.includes('(1/')) {
+        if (!title.includes('(1/')) return
 
-            for (const i of SLOTS) {
+        for (const i of SLOTS) {
 
-                const item = window.slots[i]
+            const item = window.slots[i]
 
-                const actual = item
-                    ? `${item.name}|${item.displayName || ''}|${item.count}`
-                    : "VACIO"
+            const actual = item
+                ? `${item.name}|${item.displayName || ''}|${item.count}`
+                : "VACIO"
 
-                if (anterior[i] !== undefined && anterior[i] !== actual) {
+            // Anti rebote (evita dobles triggers rápidos)
+            if (Date.now() - ultimoCambio < 1500) continue
 
-                    console.log(`🚨 Cambio detectado slot ${i}`)
+            if (anterior[i] !== undefined && anterior[i] !== actual) {
 
-                    const canal = await discordClient.channels.fetch(CANAL_ID)
+                ultimoCambio = Date.now()
 
-                    // borrar mensaje anterior
-                    if (ultimoMensaje) {
-                        try { await ultimoMensaje.delete() } catch { }
-                    }
+                console.log(`🚨 Cambio real detectado slot ${i}`)
 
-                    ultimoMensaje = await canal.send(
-                        `<@${TU_ID}> 🚨 CAMBIO SLOT ${i}`
-                    )
+                const canal = await discordClient.channels.fetch(CANAL_ID)
 
-                    // 🔔 Mensajes privados en Minecraft (x3)
-                    setTimeout(() => {
-                        bot.chat(`/msg irojas 🚨 SLOT ${i} CAMBIÓ`)
-                    }, 300)
-
-                    setTimeout(() => {
-                        bot.chat(`/msg irojas 🚨 SLOT ${i} CAMBIÓ`)
-                    }, 800)
-
-                    setTimeout(() => {
-                        bot.chat(`/msg irojas 🚨 SLOT ${i} CAMBIÓ`)
-                    }, 1300)
-
-                    // si quedó ocupado guardamos tiempo
-                    if (item) {
-                        const timestamp = Date.now()
-
-                        db.prepare(`
-                            INSERT INTO slots (id, timestamp)
-                            VALUES (?, ?)
-                            ON CONFLICT(id) DO UPDATE SET timestamp = excluded.timestamp
-                        `).run(i.toString(), timestamp)
-                    } else {
-                        db.prepare(`DELETE FROM slots WHERE id = ?`)
-                            .run(i.toString())
-                    }
-
-                    if (bot.actualizarHUD) bot.actualizarHUD()
+                if (ultimoMensaje) {
+                    try { await ultimoMensaje.delete() } catch { }
                 }
 
-                anterior[i] = actual
+                ultimoMensaje = await canal.send(
+                    `<@${TU_ID}> 🚨 CAMBIO SLOT ${i}`
+                )
+
+                // Guardado eficiente
+                if (item) {
+                    db.prepare(`
+                        INSERT INTO slots (id, timestamp)
+                        VALUES (?, ?)
+                        ON CONFLICT(id) DO UPDATE SET timestamp = excluded.timestamp
+                    `).run(i.toString(), Date.now())
+                } else {
+                    db.prepare(`DELETE FROM slots WHERE id = ?`)
+                        .run(i.toString())
+                }
+
+                if (bot.actualizarHUD) bot.actualizarHUD()
             }
 
-            setTimeout(() => {
-                bot.closeWindow(window)
-                esperando = false
-            }, 1200)
+            anterior[i] = actual
         }
+
+        setTimeout(() => {
+            bot.closeWindow(window)
+            procesando = false
+        }, 1000)
     })
 }
