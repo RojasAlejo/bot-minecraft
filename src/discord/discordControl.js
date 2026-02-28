@@ -104,7 +104,7 @@ module.exports = (mcBot) => {
                 .setTitle('🦌 PUNTOS DEL CLAN')
                 .setColor(totalHoy >= 0 ? 0x2ecc71 : 0xe74c3c)
                 .setDescription(
-`**HOY**
+                    `**HOY**
 Ganados ............. ${ganadosHoy}
 Perdidos ............ ${perdidosHoy}
 Neto ................ ${totalHoy >= 0 ? '+' : ''}${totalHoy}
@@ -125,13 +125,25 @@ ${diferencia >= 0 ? '+' : ''}${diferencia}`
         // =========================
         if (message.author.id !== TU_ID) return
 
+        // 🔥 !RESTART (solo admin)
+        if (message.content === '!restart') {
+
+            await message.reply('♻ Reiniciando bot...')
+
+            console.log('♻ Restart solicitado desde Discord')
+
+            setTimeout(() => {
+                process.exit(1) // Railway reinicia el servicio automáticamente
+            }, 1000)
+        }
+
         // 🔥 /APAGAR
         if (message.content === '/apagar') {
 
             mcBot.pwarpActivo = false
 
             if (mcBot.currentWindow) {
-                try { mcBot.closeWindow(mcBot.currentWindow) } catch {}
+                try { mcBot.closeWindow(mcBot.currentWindow) } catch { }
             }
 
             return message.reply('🛑 Pwarp APAGADO')
