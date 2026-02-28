@@ -7,12 +7,13 @@ module.exports = (bot, discordClient) => {
     const TU_ID = '421053729605943297'
     const CANAL_ID = '1209783958741454912'
     const INTERVALO = 30000
+    const TIEMPO_BORRADO = 60000
     const SLOTS = [2, 3, 4, 5, 6]
 
     let anterior = {}
     let procesando = false
-    let ultimoMensaje = null
     let ultimoCambio = 0
+    let mensajesAlerta = []
 
     bot.pwarpActivo = true
     bot.modoListo = false
@@ -30,7 +31,7 @@ module.exports = (bot, discordClient) => {
         procesando = true
         bot.chat('/pwarp')
 
-        // Timeout de seguridad
+        // Timeout seguridad
         setTimeout(() => {
             procesando = false
         }, 10000)
@@ -44,13 +45,14 @@ module.exports = (bot, discordClient) => {
     })
 
     // =========================
-    // DETECCIÓN DE GUI
+    // DETECCIÓN GUI
     // =========================
 
     bot.on('windowOpen', async (window) => {
 
         const title = window.title?.toString() || ''
 
+        // Primera página
         if (title.includes('Warps comunitarios') && !title.includes('(1/')) {
 
             setTimeout(() => {
@@ -74,7 +76,7 @@ module.exports = (bot, discordClient) => {
                 ? `${item.name}|${item.displayName || ''}|${item.count}`
                 : "VACIO"
 
-            // Anti rebote (evita dobles triggers rápidos)
+            // Anti rebote
             if (Date.now() - ultimoCambio < 1500) continue
 
             if (anterior[i] !== undefined && anterior[i] !== actual) {
@@ -85,15 +87,39 @@ module.exports = (bot, discordClient) => {
 
                 const canal = await discordClient.channels.fetch(CANAL_ID)
 
-                if (ultimoMensaje) {
-                    try { await ultimoMensaje.delete() } catch { }
+                // 🔥 BORRAR ALERTAS ANTERIORES DEL BOT
+                for (const msg of mensajesAlerta) {
+                    try { await msg.delete() } catch {}
                 }
+                mensajesAlerta = []
 
-                ultimoMensaje = await canal.send(
-                    `<@${TU_ID}> 🚨 CAMBIO SLOT ${i}`
+                // 🔥 NUEVA ALERTA
+                const mensaje = await canal.send(
+                    `<@${TU_ID}> 🚨 **CAMBIO SLOT ${i}**`
                 )
 
-                // Guardado eficiente
+                mensajesAlerta.push(mensaje)
+
+                // 🔥 AUTO BORRADO
+                setTimeout(async () => {
+                    try { await mensaje.delete() } catch {}
+                    mensajesAlerta = mensajesAlerta.filter(m => m.id !== mensaje.id)
+                }, TIEMPO_BORRADO)
+
+                // 🔔 MENSAJE PRIVADO EN MINECRAFT (x3)
+                setTimeout(() => {
+                    bot.chat(`/msg iRojas 🚨 PWARP SLOT ${i} DISPONIBLE`)
+                }, 300)
+
+                setTimeout(() => {
+                    bot.chat(`/msg iRojas 🚨 PWARP SLOT ${i} DISPONIBLE`)
+                }, 800)
+
+                setTimeout(() => {
+                    bot.chat(`/msg iRojas 🚨 PWARP SLOT ${i} DISPONIBLE`)
+                }, 1300)
+
+                // Guardar timestamp
                 if (item) {
                     db.prepare(`
                         INSERT INTO slots (id, timestamp)
