@@ -14,7 +14,7 @@ module.exports = (mcBot) => {
     const TU_ID = '421053729605943297'
     const CANAL_STATS_ID = '1476705870187597914'
 
-    const COOLDOWN = 30000 // 30 segundos
+    const COOLDOWN = 30000
     let ultimoUsoPuntos = 0
 
     client.once('clientReady', () => {
@@ -41,7 +41,6 @@ module.exports = (mcBot) => {
             if (message.channel.id !== CANAL_STATS_ID)
                 return message.reply('❌ Este comando solo funciona en el canal de estadísticas.')
 
-            // Verificar rol
             const tieneRol = message.member.roles.cache.some(
                 role => role.name === 'GUERRERO'
             )
@@ -49,7 +48,6 @@ module.exports = (mcBot) => {
             if (!tieneRol)
                 return message.reply('⛔ Necesitas el rol **GUERRERO** para usar este comando.')
 
-            // Cooldown
             const ahora = Date.now()
 
             if (ahora - ultimoUsoPuntos < COOLDOWN) {
@@ -64,7 +62,6 @@ module.exports = (mcBot) => {
             const db = require('../database/db')
 
             const hoy = new Date().toISOString().split('T')[0]
-
             const ayerDate = new Date()
             ayerDate.setDate(ayerDate.getDate() - 1)
             const ayer = ayerDate.toISOString().split('T')[0]
@@ -128,22 +125,55 @@ ${diferencia >= 0 ? '+' : ''}${diferencia}`
         // =========================
         if (message.author.id !== TU_ID) return
 
-        // 🔥 Control prender/apagar
+        // 🔥 /APAGAR
         if (message.content === '/apagar') {
 
             mcBot.pwarpActivo = false
 
             if (mcBot.currentWindow) {
-                try { mcBot.closeWindow(mcBot.currentWindow) } catch { }
+                try { mcBot.closeWindow(mcBot.currentWindow) } catch {}
             }
 
             return message.reply('🛑 Pwarp APAGADO')
         }
 
+        // 🔥 /PRENDER
         if (message.content === '/prender') {
 
             mcBot.pwarpActivo = true
             return message.reply('🟢 Pwarp ENCENDIDO')
+        }
+
+        // 🔥 /FORZAR
+        if (message.content.startsWith('/forzar')) {
+
+            const partes = message.content.split(' ')
+
+            if (partes.length !== 3)
+                return message.reply('Uso correcto: /forzar SLOT MINUTOS')
+
+            const slot = partes[1]
+            const minutos = parseInt(partes[2])
+
+            if (isNaN(minutos))
+                return message.reply('Los minutos deben ser un número')
+
+            const db = require('../database/db')
+
+            const timestamp = Date.now() - (minutos * 60 * 1000)
+
+            db.prepare(`
+                INSERT INTO slots (id, timestamp)
+                VALUES (?, ?)
+                ON CONFLICT(id) DO UPDATE SET timestamp = excluded.timestamp
+            `).run(slot.toString(), timestamp)
+
+            if (mcBot.actualizarHUD)
+                mcBot.actualizarHUD()
+
+            return message.reply(
+                `✅ Slot ${slot} forzado como adquirido hace ${minutos} minutos`
+            )
         }
 
         // 🎮 Comandos manuales hacia Minecraft
